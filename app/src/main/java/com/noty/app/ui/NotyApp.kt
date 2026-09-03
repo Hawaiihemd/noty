@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -103,10 +104,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.noty.app.R
 import com.noty.app.data.Note
 import com.noty.app.ui.expressive.CollapsingLargeTopBar
+import com.noty.app.ui.expressive.GroupGap
+import com.noty.app.ui.expressive.SectionGap
 import com.noty.app.ui.expressive.SectionHeader
 import com.noty.app.ui.expressive.SegmentPosition
 import com.noty.app.ui.expressive.segmentPositionFor
@@ -431,7 +435,13 @@ private fun NotesList(
     modifier: Modifier = Modifier
 ) {
     val (pinned, others) = notes.partition { it.isPinned }
-    val showHeaders = pinned.isNotEmpty()
+    // The "Others" header only earns its place once there is a "Pinned" one to contrast it
+    // with; on a list with nothing pinned it would be labelling the whole screen.
+    val headed = pinned.isNotEmpty()
+    // Resolved here because LazyColumn's content lambda is a LazyListScope, not a
+    // composable one, so stringResource cannot be called from inside it.
+    val pinnedHeader = if (headed) stringResource(R.string.home_section_pinned) else null
+    val othersHeader = if (headed) stringResource(R.string.home_section_others) else null
 
     LazyColumn(
         state = listState,
@@ -441,52 +451,67 @@ private fun NotesList(
         ),
         modifier = modifier
     ) {
-        if (showHeaders) {
-            item(key = "pinned_header") {
-                Box(modifier = Modifier.animateItem()) {
-                    SectionHeader(stringResource(R.string.home_section_pinned))
-                }
+        noteSection(
+            headerKey = "pinned_header",
+            notes = pinned,
+            onEditClick = onEditClick,
+            onPinClick = onPinClick,
+            onDeleteClick = onDeleteClick,
+            header = pinnedHeader
+        )
+        noteSection(
+            headerKey = "others_header",
+            notes = others,
+            onEditClick = onEditClick,
+            onPinClick = onPinClick,
+            onDeleteClick = onDeleteClick,
+            header = othersHeader,
+            topPadding = SectionGap
+        )
+    }
+}
+
+/**
+ * One connected group of notes: an optional header, then the rows, each shaped for its place
+ * in the group.
+ *
+ * A LazyListScope extension rather than a composable because every note has to stay its own
+ * lazy item — wrapping the group in one item would give `animateItem()` a single block to
+ * move instead of the individual rows it is there to track.
+ */
+private fun LazyListScope.noteSection(
+    headerKey: String,
+    notes: List<Note>,
+    onEditClick: (Note) -> Unit,
+    onPinClick: (Note) -> Unit,
+    onDeleteClick: (Note) -> Unit,
+    header: String? = null,
+    topPadding: Dp = 0.dp
+) {
+    if (notes.isEmpty()) return
+
+    if (header != null) {
+        item(key = headerKey) {
+            Box(modifier = Modifier.animateItem().padding(top = topPadding)) {
+                SectionHeader(header)
             }
         }
-        itemsIndexed(pinned, key = { _, note -> note.id }) { index, note ->
-            NoteCard(
-                note = note,
-                position = segmentPositionFor(index, pinned.size),
-                onEditClick = { onEditClick(note) },
-                onPinClick = { onPinClick(note) },
-                onDeleteClick = { onDeleteClick(note) },
-                modifier = Modifier
-                    .animateItem(
-                        fadeInSpec = tween(durationMillis = 180),
-                        fadeOutSpec = tween(durationMillis = 120),
-                        placementSpec = tween(durationMillis = 200)
-                    )
-                    .padding(bottom = 2.dp)
-            )
-        }
-        if (showHeaders && others.isNotEmpty()) {
-            item(key = "others_header") {
-                Box(modifier = Modifier.animateItem().padding(top = 20.dp)) {
-                    SectionHeader(stringResource(R.string.home_section_others))
-                }
-            }
-        }
-        itemsIndexed(others, key = { _, note -> note.id }) { index, note ->
-            NoteCard(
-                note = note,
-                position = segmentPositionFor(index, others.size),
-                onEditClick = { onEditClick(note) },
-                onPinClick = { onPinClick(note) },
-                onDeleteClick = { onDeleteClick(note) },
-                modifier = Modifier
-                    .animateItem(
-                        fadeInSpec = tween(durationMillis = 180),
-                        fadeOutSpec = tween(durationMillis = 120),
-                        placementSpec = tween(durationMillis = 200)
-                    )
-                    .padding(bottom = 2.dp)
-            )
-        }
+    }
+    itemsIndexed(notes, key = { _, note -> note.id }) { index, note ->
+        NoteCard(
+            note = note,
+            position = segmentPositionFor(index, notes.size),
+            onEditClick = { onEditClick(note) },
+            onPinClick = { onPinClick(note) },
+            onDeleteClick = { onDeleteClick(note) },
+            modifier = Modifier
+                .animateItem(
+                    fadeInSpec = tween(durationMillis = 180),
+                    fadeOutSpec = tween(durationMillis = 120),
+                    placementSpec = tween(durationMillis = 200)
+                )
+                .padding(bottom = GroupGap)
+        )
     }
 }
 
