@@ -1,5 +1,6 @@
 package com.noty.app.ui
 
+import android.app.Activity
 import android.os.Build
 import android.text.format.DateUtils
 import androidx.activity.compose.BackHandler
@@ -83,6 +84,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -99,6 +101,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -107,6 +110,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.noty.app.R
+import androidx.core.view.WindowCompat
 import com.noty.app.data.Note
 import com.noty.app.ui.expressive.CollapsingLargeTopBar
 import com.noty.app.ui.expressive.GroupGap
@@ -119,6 +123,7 @@ import com.noty.app.ui.expressive.ExpressiveSwitch
 import com.noty.app.ui.expressive.rememberExpressiveHaptics
 import com.noty.app.ui.expressive.rememberExpressiveScrollBehavior
 import com.noty.app.utils.ReminderScheduler
+import com.noty.app.utils.ThemeManager
 import com.noty.app.data.NoteType
 import java.util.Calendar
 import java.util.TimeZone
@@ -127,10 +132,16 @@ import java.util.TimeZone
 
 @Composable
 fun NotyTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: ThemeManager.ThemeMode = ThemeManager.ThemeMode.SYSTEM,
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    val darkTheme = when (themeMode) {
+        ThemeManager.ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeManager.ThemeMode.LIGHT -> false
+        ThemeManager.ThemeMode.DARK -> true
+    }
+
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
@@ -148,6 +159,24 @@ fun NotyTheme(
             surface = Color(0xFFFDFBFF),
             background = Color(0xFFFDFBFF)
         )
+    }
+
+    // The status and navigation bar icons are the one piece of chrome Compose does not draw,
+    // so they have to be told which way to go. Previously this came free from
+    // AppCompatDelegate.setDefaultNightMode() changing the resource configuration; now that
+    // the theme is a plain parameter, the window would keep the *system's* light/dark icons
+    // and a user on "Dark" under a light system would get dark icons on a dark bar.
+    val view = LocalView.current
+    // as? rather than as: there is no window to configure in a @Preview, and none either
+    // if this theme is ever hosted by a ComposeView outside an Activity.
+    val window = (view.context as? Activity)?.window
+    if (window != null && !view.isInEditMode) {
+        SideEffect {
+            WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = !darkTheme
+                isAppearanceLightNavigationBars = !darkTheme
+            }
+        }
     }
 
     MaterialTheme(
