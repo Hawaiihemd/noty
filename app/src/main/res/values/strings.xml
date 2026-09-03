@@ -62,9 +62,11 @@
     <string name="settings_pin_default_title">Pin new notes by default</string>
     <string name="settings_pin_default_subtitle">New notes start pinned as notifications</string>
     <string name="settings_github">GitHub</string>
-    <string name="settings_version">Version %1$s (%2$d)</string>
-    <string name="settings_version_unknown">Version unknown</string>
-    <string name="settings_version_name_fallback">1.0</string>
+    <!-- Prefixes the version read off the installed package. Quoted so aapt keeps the
+         trailing space; the shared rememberAppVersionLabel() concatenates rather than
+         formatting, so the space has to live here. -->
+    <string name="settings_version_prefix">"Version "</string>
+    <string name="settings_version_unknown_name">unknown</string>
 
     <!-- Theme picker -->
     <string name="theme_system">System</string>
