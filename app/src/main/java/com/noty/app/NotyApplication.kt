@@ -3,17 +3,14 @@ package com.noty.app
 import android.app.Application
 import androidx.appcompat.app.AppCompatDelegate
 import com.noty.app.utils.ThemeManager
-import com.google.android.material.color.DynamicColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class NotyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        DynamicColors.applyToActivitiesIfAvailable(this)
-        
+
         val themeManager = ThemeManager(this)
         CoroutineScope(Dispatchers.Main).launch {
             themeManager.themeFlow.collect { theme ->

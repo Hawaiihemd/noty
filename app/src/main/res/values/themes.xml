@@ -7,62 +7,31 @@
         <item name="postSplashScreenTheme">@style/Theme.Noty</item>
     </style>
 
-    <!-- Base application theme. -->
-    <style name="Theme.Noty" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Main colors -->
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorOnPrimary">@color/onPrimary</item>
-        <item name="colorPrimaryContainer">@color/primaryContainer</item>
-        <item name="colorOnPrimaryContainer">@color/onPrimaryContainer</item>
-        
-        <item name="colorSecondary">@color/secondary</item>
-        <item name="colorOnSecondary">@color/onSecondary</item>
-        <item name="colorSecondaryContainer">@color/secondaryContainer</item>
-        <item name="colorOnSecondaryContainer">@color/onSecondaryContainer</item>
-        
-        <item name="colorTertiary">@color/tertiary</item>
-        <item name="colorOnTertiary">@color/onTertiary</item>
-        <item name="colorTertiaryContainer">@color/tertiaryContainer</item>
-        <item name="colorOnTertiaryContainer">@color/onTertiaryContainer</item>
+    <!--
+      Noty draws entirely in Compose — there is not one layout XML in the project — so this
+      theme is read for the window and nothing else: the background behind the first frame,
+      and the system bar declarations below.
 
+      The colorPrimary / colorSecondary / colorTertiary families that used to live here were
+      read by nothing. Compose builds its own scheme in NotyTheme, from either
+      dynamicLightColorScheme() or literals, and never consults the Activity theme. The
+      splash screen does not consult it either: Theme.Noty.Splash inherits from
+      Theme.SplashScreen, and postSplashScreenTheme only names the theme to *switch to*
+      afterwards. Same for the shapeAppearanceCorner* overrides, which only Material
+      Components views read, and there are none.
+    -->
+    <style name="Theme.Noty" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:windowBackground">@color/background</item>
         <item name="colorSurface">@color/surface</item>
         <item name="colorOnSurface">@color/onSurface</item>
-        <item name="colorSurfaceVariant">@color/surfaceVariant</item>
-        <item name="colorOnSurfaceVariant">@color/onSurfaceVariant</item>
 
-        <!-- Status bar and navigation bar -->
+        <!--
+          Both of these are superseded by enableEdgeToEdge() in MainActivity.onCreate, and
+          ignored outright from API 35. They stay for the window that exists before that
+          call runs, which is a real window on API 26-34.
+        -->
         <item name="android:statusBarColor">?attr/colorSurface</item>
         <item name="android:navigationBarColor">?attr/colorSurface</item>
         <item name="android:windowLightStatusBar">true</item>
-
-        <!-- M3 Expressive Typography Overrides (Optional, standard M3 is good base, but we can make it punchier) -->
-        <!-- Using default M3 typescale for now, can customize later -->
-        
-        <!-- M3 Expressive Shapes -->
-        <item name="shapeAppearanceCornerExtraLarge">@style/ShapeAppearance.Material3.Expressive.Corner.ExtraLarge</item>
-        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.Material3.Expressive.Corner.Large</item>
-        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.Material3.Expressive.Corner.Medium</item>
-        <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.Material3.Expressive.Corner.Small</item>
-    </style>
-
-    <style name="ShapeAppearance.Material3.Expressive.Corner.ExtraLarge" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">48dp</item> <!-- Larger, expressive curves -->
-    </style>
-
-    <style name="ShapeAppearance.Material3.Expressive.Corner.Large" parent="ShapeAppearance.Material3.Corner.Large">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">28dp</item>
-    </style>
-
-    <style name="ShapeAppearance.Material3.Expressive.Corner.Medium" parent="ShapeAppearance.Material3.Corner.Medium">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">16dp</item>
-    </style>
-    
-    <style name="ShapeAppearance.Material3.Expressive.Corner.Small" parent="ShapeAppearance.Material3.Corner.Small">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">8dp</item>
     </style>
 </resources>
