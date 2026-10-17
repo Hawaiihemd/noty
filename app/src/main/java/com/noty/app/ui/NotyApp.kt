@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -42,7 +43,6 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Notes
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Alarm
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
@@ -66,14 +66,11 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -100,18 +97,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.noty.app.R
 import com.noty.app.data.Note
+import com.noty.app.ui.expressive.CollapsingLargeTopBar
+import com.noty.app.ui.expressive.GroupGap
+import com.noty.app.ui.expressive.SectionGap
+import com.noty.app.ui.expressive.SectionHeader
+import com.noty.app.ui.expressive.SegmentPosition
+import com.noty.app.ui.expressive.segmentPositionFor
+import com.noty.app.ui.expressive.segmentShape
+import com.noty.app.ui.expressive.ExpressiveSwitch
+import com.noty.app.ui.expressive.rememberExpressiveHaptics
+import com.noty.app.ui.expressive.rememberExpressiveScrollBehavior
 import com.noty.app.utils.ReminderScheduler
 import com.noty.app.data.NoteType
 import java.util.Calendar
@@ -178,9 +184,9 @@ fun NotyApp(
     val displayedNotes = if (searchActive) filteredNotes else notes
     val defaultPin by viewModel.defaultPinFlow.collectAsState(initial = true)
 
-    val haptics = LocalHapticFeedback.current
+    val haptics = rememberExpressiveHaptics()
     val listState = rememberLazyListState()
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val scrollBehavior = rememberExpressiveScrollBehavior()
     val searchFocusRequester = remember { FocusRequester() }
     val fabExpanded by remember {
         derivedStateOf {
@@ -237,11 +243,12 @@ fun NotyApp(
                                 focusRequester = searchFocusRequester
                             )
                         } else {
-                            LargeTopAppBar(
-                                title = { Text(stringResource(R.string.app_name)) },
+                            CollapsingLargeTopBar(
+                                title = stringResource(R.string.app_name),
+                                scrollBehavior = scrollBehavior,
                                 actions = {
                                     IconButton(onClick = {
-                                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                                        haptics.confirm()
                                         searchActive = true
                                     }) {
                                         Icon(
@@ -250,7 +257,7 @@ fun NotyApp(
                                         )
                                     }
                                     IconButton(onClick = {
-                                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                                        haptics.confirm()
                                         showSettings = true
                                     }) {
                                         Icon(
@@ -258,12 +265,7 @@ fun NotyApp(
                                             contentDescription = stringResource(R.string.cd_settings)
                                         )
                                     }
-                                },
-                                colors = TopAppBarDefaults.largeTopAppBarColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
-                                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                                ),
-                                scrollBehavior = scrollBehavior
+                                }
                             )
                         }
                     }
@@ -274,7 +276,7 @@ fun NotyApp(
                         icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
                         expanded = fabExpanded,
                         onClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                            haptics.confirm()
                             showAddSheet = true
                         }
                     )
@@ -433,7 +435,13 @@ private fun NotesList(
     modifier: Modifier = Modifier
 ) {
     val (pinned, others) = notes.partition { it.isPinned }
-    val showHeaders = pinned.isNotEmpty()
+    // The "Others" header only earns its place once there is a "Pinned" one to contrast it
+    // with; on a list with nothing pinned it would be labelling the whole screen.
+    val headed = pinned.isNotEmpty()
+    // Resolved here because LazyColumn's content lambda is a LazyListScope, not a
+    // composable one, so stringResource cannot be called from inside it.
+    val pinnedHeader = if (headed) stringResource(R.string.home_section_pinned) else null
+    val othersHeader = if (headed) stringResource(R.string.home_section_others) else null
 
     LazyColumn(
         state = listState,
@@ -443,52 +451,67 @@ private fun NotesList(
         ),
         modifier = modifier
     ) {
-        if (showHeaders) {
-            item(key = "pinned_header") {
-                Box(modifier = Modifier.animateItem()) {
-                    SectionHeader(stringResource(R.string.home_section_pinned))
-                }
+        noteSection(
+            headerKey = "pinned_header",
+            notes = pinned,
+            onEditClick = onEditClick,
+            onPinClick = onPinClick,
+            onDeleteClick = onDeleteClick,
+            header = pinnedHeader
+        )
+        noteSection(
+            headerKey = "others_header",
+            notes = others,
+            onEditClick = onEditClick,
+            onPinClick = onPinClick,
+            onDeleteClick = onDeleteClick,
+            header = othersHeader,
+            topPadding = SectionGap
+        )
+    }
+}
+
+/**
+ * One connected group of notes: an optional header, then the rows, each shaped for its place
+ * in the group.
+ *
+ * A LazyListScope extension rather than a composable because every note has to stay its own
+ * lazy item — wrapping the group in one item would give `animateItem()` a single block to
+ * move instead of the individual rows it is there to track.
+ */
+private fun LazyListScope.noteSection(
+    headerKey: String,
+    notes: List<Note>,
+    onEditClick: (Note) -> Unit,
+    onPinClick: (Note) -> Unit,
+    onDeleteClick: (Note) -> Unit,
+    header: String? = null,
+    topPadding: Dp = 0.dp
+) {
+    if (notes.isEmpty()) return
+
+    if (header != null) {
+        item(key = headerKey) {
+            Box(modifier = Modifier.animateItem().padding(top = topPadding)) {
+                SectionHeader(header)
             }
         }
-        itemsIndexed(pinned, key = { _, note -> note.id }) { index, note ->
-            NoteCard(
-                note = note,
-                position = segmentPositionFor(index, pinned.size),
-                onEditClick = { onEditClick(note) },
-                onPinClick = { onPinClick(note) },
-                onDeleteClick = { onDeleteClick(note) },
-                modifier = Modifier
-                    .animateItem(
-                        fadeInSpec = tween(durationMillis = 180),
-                        fadeOutSpec = tween(durationMillis = 120),
-                        placementSpec = tween(durationMillis = 200)
-                    )
-                    .padding(bottom = 2.dp)
-            )
-        }
-        if (showHeaders && others.isNotEmpty()) {
-            item(key = "others_header") {
-                Box(modifier = Modifier.animateItem().padding(top = 20.dp)) {
-                    SectionHeader(stringResource(R.string.home_section_others))
-                }
-            }
-        }
-        itemsIndexed(others, key = { _, note -> note.id }) { index, note ->
-            NoteCard(
-                note = note,
-                position = segmentPositionFor(index, others.size),
-                onEditClick = { onEditClick(note) },
-                onPinClick = { onPinClick(note) },
-                onDeleteClick = { onDeleteClick(note) },
-                modifier = Modifier
-                    .animateItem(
-                        fadeInSpec = tween(durationMillis = 180),
-                        fadeOutSpec = tween(durationMillis = 120),
-                        placementSpec = tween(durationMillis = 200)
-                    )
-                    .padding(bottom = 2.dp)
-            )
-        }
+    }
+    itemsIndexed(notes, key = { _, note -> note.id }) { index, note ->
+        NoteCard(
+            note = note,
+            position = segmentPositionFor(index, notes.size),
+            onEditClick = { onEditClick(note) },
+            onPinClick = { onPinClick(note) },
+            onDeleteClick = { onDeleteClick(note) },
+            modifier = Modifier
+                .animateItem(
+                    fadeInSpec = tween(durationMillis = 180),
+                    fadeOutSpec = tween(durationMillis = 120),
+                    placementSpec = tween(durationMillis = 200)
+                )
+                .padding(bottom = GroupGap)
+        )
     }
 }
 
@@ -505,7 +528,7 @@ fun NoteCard(
     modifier: Modifier = Modifier
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
-    val haptics = LocalHapticFeedback.current
+    val haptics = rememberExpressiveHaptics()
     val relativeTime = remember(note.timestamp) {
         DateUtils.getRelativeTimeSpanString(
             note.timestamp,
@@ -525,14 +548,11 @@ fun NoteCard(
             modifier = Modifier
                 .combinedClickable(
                     onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                        haptics.confirm()
                         onEditClick()
                     },
                     onLongClick = {
-                        haptics.performHapticFeedback(
-                            if (note.isPinned) HapticFeedbackType.ToggleOff
-                            else HapticFeedbackType.ToggleOn
-                        )
+                        haptics.toggle(on = !note.isPinned)
                         onPinClick()
                     },
                     onLongClickLabel = stringResource(
@@ -612,7 +632,7 @@ fun NoteCard(
             Box {
                 IconButton(
                     onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                        haptics.open()
                         menuExpanded = true
                     },
                     modifier = Modifier.size(36.dp)
@@ -634,10 +654,7 @@ fun NoteCard(
                         },
                         leadingIcon = { Icon(Icons.Rounded.PushPin, contentDescription = null) },
                         onClick = {
-                            haptics.performHapticFeedback(
-                                if (note.isPinned) HapticFeedbackType.ToggleOff
-                                else HapticFeedbackType.ToggleOn
-                            )
+                            haptics.toggle(on = !note.isPinned)
                             menuExpanded = false
                             onPinClick()
                         }
@@ -646,7 +663,7 @@ fun NoteCard(
                         text = { Text(stringResource(R.string.action_edit)) },
                         leadingIcon = { Icon(Icons.Rounded.Edit, contentDescription = null) },
                         onClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                            haptics.confirm()
                             menuExpanded = false
                             onEditClick()
                         }
@@ -666,7 +683,7 @@ fun NoteCard(
                             )
                         },
                         onClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                            haptics.longPress()
                             menuExpanded = false
                             onDeleteClick()
                         }
@@ -697,7 +714,7 @@ fun NoteBottomSheet(
     var showTimePicker by remember { mutableStateOf(false) }
     var pendingDateMillis by remember { mutableStateOf<Long?>(null) }
     val context = LocalContext.current
-    val haptics = LocalHapticFeedback.current
+    val haptics = rememberExpressiveHaptics()
 
     // Reminders are gated on the exact-alarm permission: without it Android can
     // delay delivery by 10+ minutes, so the feature is hidden rather than degraded.
@@ -736,29 +753,11 @@ fun NoteBottomSheet(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.sheet_pin_note), style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.width(8.dp))
-                    Switch(
+                    ExpressiveSwitch(
                         checked = isPinned,
                         onCheckedChange = { checked ->
-                            haptics.performHapticFeedback(
-                                if (checked) HapticFeedbackType.ToggleOn
-                                else HapticFeedbackType.ToggleOff
-                            )
+                            haptics.toggle(on = checked)
                             isPinned = checked
-                        },
-                        thumbContent = {
-                            AnimatedContent(
-                                targetState = isPinned,
-                                transitionSpec = {
-                                    fadeIn(tween(100)) togetherWith fadeOut(tween(100))
-                                },
-                                label = "pinThumbIcon"
-                            ) { checked ->
-                                Icon(
-                                    imageVector = if (checked) Icons.Rounded.Check else Icons.Rounded.Close,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SwitchDefaults.IconSize)
-                                )
-                            }
                         }
                     )
                 }
@@ -798,7 +797,7 @@ fun NoteBottomSheet(
             // Reminder picker pill
             Surface(
                 onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                    haptics.open()
                     if (canScheduleReminders) {
                         showDatePicker = true
                     } else {
@@ -835,7 +834,7 @@ fun NoteBottomSheet(
                     if (reminderAt != null) {
                         IconButton(
                             onClick = {
-                                haptics.performHapticFeedback(HapticFeedbackType.ToggleOff)
+                                haptics.toggle(on = false)
                                 reminderAt = null
                             },
                             modifier = Modifier.size(24.dp)
@@ -861,7 +860,7 @@ fun NoteBottomSheet(
             ) {
                 FilledTonalButton(
                     onClick = {
-                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                        haptics.confirm()
                         onDismiss()
                     },
                     shape = RoundedCornerShape(
@@ -879,10 +878,10 @@ fun NoteBottomSheet(
                     onClick = {
                         val trimmed = title.trim()
                         if (trimmed.isNotEmpty()) {
-                            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                            haptics.confirm()
                             onSave(trimmed, description.trim(), isPinned, reminderAt)
                         } else {
-                            haptics.performHapticFeedback(HapticFeedbackType.Reject)
+                            haptics.reject()
                             titleError = true
                         }
                     },
@@ -1027,10 +1026,10 @@ fun NoteBottomSheet(
                         // The date picker blocks past days, but not an earlier
                         // time on today — an alarm set in the past fires instantly.
                         if (candidate <= System.currentTimeMillis()) {
-                            haptics.performHapticFeedback(HapticFeedbackType.Reject)
+                            haptics.reject()
                             timeInPastError = true
                         } else {
-                            haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                            haptics.confirm()
                             reminderAt = candidate
                             timeInPastError = false
                             showTimePicker = false
