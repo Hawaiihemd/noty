@@ -2,14 +2,14 @@
 # Dependabot watches this file; see .github/dependabot.yml.
 
 [versions]
-agp = "9.2.0"
-kotlin = "2.0.21"
-ksp = "2.0.21-1.0.28"
+agp = "9.4.1"
+kotlin = "2.4.21"
+ksp = "2.3.12"
 detekt = "1.23.8"
-detektComposeRules = "0.4.28"
+detektComposeRules = "0.6.8"
 
 androidxCore = "1.12.0"
-material = "1.11.0"
+material = "1.14.0"
 lifecycle = "2.7.0"
 # 2.7.x required for KSP2 / AGP built-in Kotlin compatibility
 room = "2.7.2"
