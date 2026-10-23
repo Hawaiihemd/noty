@@ -1,9 +1,10 @@
 <resources>
     <!-- Dark counterpart of Theme.Noty. See values/themes.xml for why so little is here. -->
     <style name="Theme.Noty" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="android:windowBackground">#1A1B1E</item>
-        <item name="colorSurface">#1A1B1E</item>
-        <item name="colorOnSurface">#E4E2E6</item>
+        <!-- surfaceDark / backgroundDark / onSurfaceDark, from ui/theme/Color.kt -->
+        <item name="android:windowBackground">#10140F</item>
+        <item name="colorSurface">#10140F</item>
+        <item name="colorOnSurface">#E0E4DB</item>
 
         <item name="android:statusBarColor">?attr/colorSurface</item>
         <item name="android:navigationBarColor">?attr/colorSurface</item>

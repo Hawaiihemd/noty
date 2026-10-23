@@ -16,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModelProvider
+import com.noty.app.ui.theme.NotyTheme
 import com.noty.app.utils.QuickNoteTileService
 import com.noty.app.utils.ThemeManager
 

@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Only the colours the *window* needs. The palette Noty actually shows lives in NotyTheme's
-  lightColorScheme/darkColorScheme, because Compose never reads these.
+  Only the colours the *window* needs. The palette Noty actually shows lives in
+  ui/theme/Color.kt, because Compose never reads these.
+
+  They are still the same values as that palette's surface roles, and have to stay that way:
+  this is the colour of the frame that exists before Compose has drawn anything, so a
+  mismatch shows up as a flash of the wrong background on launch.
 -->
 <resources>
-    <color name="background">#FDFBFF</color>
-    <color name="surface">#FDFBFF</color>
-    <color name="onSurface">#1A1B1E</color>
+    <!-- surfaceLight / backgroundLight / onSurfaceLight -->
+    <color name="background">#F7FBF1</color>
+    <color name="surface">#F7FBF1</color>
+    <color name="onSurface">#191D17</color>
 
-    <!-- Splash background below API 31. -->
-    <color name="black">#000000</color>
+    <!--
+      Splash background, on every API level. The primary tonal palette at tone 20 — dark
+      enough for ic_splash_foreground, which is a white "ny" and would disappear on any of
+      the surface colours above.
+    -->
+    <color name="splash_background">#00390A</color>
 </resources>

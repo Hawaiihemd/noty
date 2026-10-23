@@ -42,8 +42,14 @@ style:
       - "Composable"
     # Room schema versions are the vocabulary here, and MIGRATION_3_4 already names the
     # pair beside it.
+    #
+    # ui/theme/Color.kt holds two generated Material 3 palettes, 72 ARGB literals. Each one is
+    # already named by the role it is assigned to — `val primaryLight = Color(0xFF3B6939)` —
+    # and hoisting it again would just restate that name. These are generated output, not
+    # arithmetic, and are regenerated wholesale rather than edited by hand.
     excludes:
       - "**/data/AppDatabase.kt"
+      - "**/ui/theme/Color.kt"
       - "**/test/**"
       - "**/androidTest/**"
   MaxLineLength:
