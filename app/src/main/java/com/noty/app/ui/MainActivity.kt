@@ -7,7 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,9 +17,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModelProvider
 import com.noty.app.utils.QuickNoteTileService
-import com.google.android.material.color.DynamicColors
+import com.noty.app.utils.ThemeManager
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
     companion object {
         private const val REQUEST_NOTIFICATION_PERMISSION = 101
@@ -30,7 +30,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
-        DynamicColors.applyToActivityIfAvailable(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
@@ -47,7 +46,10 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             val dynamicColors by viewModel.dynamicColorsFlow.collectAsState(initial = true)
-            NotyTheme(dynamicColor = dynamicColors) {
+            val themeMode by viewModel.themeFlow.collectAsState(
+                initial = ThemeManager.ThemeMode.SYSTEM
+            )
+            NotyTheme(themeMode = themeMode, dynamicColor = dynamicColors) {
                 NotyApp(
                     viewModel = viewModel,
                     triggerAddNote = addNoteFromTile,
