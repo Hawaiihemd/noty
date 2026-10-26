@@ -1,6 +1,13 @@
 <resources>
 
-    <!-- Splash Screen Theme -->
+    <!--
+      One splash definition for every API level. There used to be a values-v31 override that
+      set windowSplashScreenBackground to ?attr/colorPrimary for a Material You splash, but
+      this theme's ancestry is Theme.SplashScreen -> android:Theme.DeviceDefault.NoActionBar,
+      a framework theme that never defines the AppCompat colorPrimary attribute — so it
+      resolved to nothing and the dynamic splash never happened. Any replacement has to use a
+      colour a framework theme can actually see: an app resource, or @android:color/system_*.
+    -->
     <style name="Theme.Noty.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/black</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_foreground</item>
