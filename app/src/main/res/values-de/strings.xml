@@ -14,7 +14,7 @@
     <string name="action_delete">Löschen</string>
     <string name="action_pin">Anheften</string>
     <string name="action_unpin">Ablösen</string>
-    <string name="action_open_settings">Eisntellungen öffnen</string>
+    <string name="action_open_settings">Einstellungen öffnen</string>
     <string name="action_not_now">Nicht jetzt</string>
 
     <!-- Note list -->
@@ -44,10 +44,10 @@
     <!-- Reminders -->
     <string name="reminder_add">Erinnerung hinzufügen</string>
     <string name="reminder_add_needs_permission">Erinnerung hinzufügen — braucht die Berechtigung</string>
-    <string name="reminder_permission_title">Erlaube Alarme &amp; Erinnerungen</string>
-    <string name="reminder_permission_message">Noty braucht die Berechtigung \"Alarme &amp; Erinnerungen\" um dich zum genauen Zeitpunkt den du ausgewählt hast zu erinnern. Ohne diese Berechtigung kann Android die Erinnerung um 10 Minuten oder mehr verzögern. Daher bleiben sie ausgeschaltet.</string>
+    <string name="reminder_permission_title">Erlaube Wecker und Erinnerungen</string>
+    <string name="reminder_permission_message">Noty braucht die Berechtigung \"Wecker und Erinnerungen\" um dich zum genauen Zeitpunkt den du ausgewählt hast zu erinnern. Ohne diese Berechtigung kann Android die Erinnerung um 10 Minuten oder mehr verzögern. Daher bleiben sie ausgeschaltet.</string>
     <string name="reminder_time_dialog_title">Uhrzeit einstellen</string>
-    <string name="reminder_time_in_past">Diese Uhrzeit liegt in der Vergangenheit. Wähle eine ander Uhrzeit.</string>
+    <string name="reminder_time_in_past">Diese Uhrzeit liegt in der Vergangenheit. Wähle eine andere Uhrzeit.</string>
     <string name="reminder_fallback_text">Erinnerung</string>
 
     <!-- Settings -->
@@ -66,7 +66,7 @@
          trailing space; the shared rememberAppVersionLabel() concatenates rather than
          formatting, so the space has to live here. -->
     <string name="settings_version_prefix">"Version "</string>
-    <string name="settings_version_unknown_name">unknown</string>
+    <string name="settings_version_unknown_name">unbekannt</string>
 
     <!-- Theme picker -->
     <string name="theme_system">System</string>
@@ -95,7 +95,7 @@
     <string name="cd_close_search">Suche schließen</string>
     <string name="cd_clear_search">Suche leeren</string>
     <string name="cd_more_options">Weitere Optionen</string>
-    <string name="cd_reminder_set">Erinnerung erstellen</string>
+    <string name="cd_reminder_set">Erinnerung gesetzt</string>
     <string name="cd_remove_reminder">Erinnerung entfernen</string>
     <string name="cd_pin_note">Notiz anheften</string>
     <string name="cd_unpin_note">Notiz ablösen</string>
